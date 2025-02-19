@@ -1,0 +1,7 @@
+Gemfile.lock
+
+# generated files
+index/
+packages_info.json
+repo/
+public/
