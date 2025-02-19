@@ -3,7 +3,7 @@ default:
     - shared-small
 
 variables:
-  RUST_REGISTRY_NAME: proton_internal
+  RUST_REGISTRY_NAME: proton_public_internal
 
 repository:
   stage: build

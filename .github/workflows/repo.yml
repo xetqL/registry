@@ -1,23 +1,23 @@
 name: Build and Deploy
 
 env:
-  RUST_REGISTRY_NAME: test_registry
+  RUST_REGISTRY_NAME: proton_public
 
 on:
   push:
     branches:
-      - master  # Assuming main is your default branch
+      - master  
   workflow_dispatch:  # This enables manual triggering
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # This is important for deployment
+      contents: write 
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false  # This is important
+          persist-credentials: false
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -50,9 +50,9 @@ jobs:
 
         
     permissions:
-      contents: read    # This is important for deployment
-      pages: write      # to deploy to Pages
-      id-token: write   # to verify the deployment originates from an appropriate source
+      contents: read
+      pages: write  
+      id-token: write
 
     environment:
       name: github-pages
@@ -69,7 +69,6 @@ jobs:
           name: repo-artifacts
           path: repo
 
-      # First install system dependencies
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -78,7 +77,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.3.0'  # Temporarily downgrade to 3.3.0 for better compatibility
+          ruby-version: '3.3.0' 
           bundler-cache: true
 
       - name: Build Jekyll site
@@ -95,7 +94,7 @@ jobs:
 
       - name: Upload static files as artifact
         id: upload
-        uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
+        uses: actions/upload-pages-artifact@v3 
         with:
           path: public/
 
