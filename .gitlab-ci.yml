@@ -1,0 +1,55 @@
+default:
+  tags:
+    - shared-small
+
+variables:
+  RUST_REGISTRY_NAME: proton_public_internal
+
+repository:
+  stage: build
+  image: python:latest
+  before_script:
+    - apt-get update && apt-get -y install python3-pip
+    - pip3 install --upgrade pip && pip3 install packaging
+  script:
+    - python3 index.py
+    - python3 packages_info.py
+    - mkdir repo
+    - cp -vr downloads index packages_info.json repo
+    - cat index.html | sed "s+%REGISTRY_NAME%+$RUST_REGISTRY_NAME+g" | sed "s+%CI_URL%+$CI_PAGES_URL+g"  | sed "s+%PROJECTPATH%+$CI_PROJECT_PATH+g" > repo/404.html
+  artifacts:
+    paths:
+      - repo
+  rules:
+    - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
+    # allow generate html manually for testing purpose without pushing to gitlab-pages
+    - when: manual
+
+.common-pages:
+  stage: deploy
+  dependencies:
+    - repository
+  image: harbor.protontech.ch/docker.io/library/ruby:latest
+  script:
+    - cp repo/packages_info.json jekyll/_data/.
+    - cp repo/404.html jekyll/_includes/.
+    - cd jekyll
+    - gem install bundler
+    - bundle install
+    - bundle exec jekyll build -d ../public
+    - cp -r ../repo/downloads ../public
+    - cp -r ../repo/index ../public
+  artifacts:
+    paths:
+      - public
+
+pages:
+  extends: .common-pages
+  rules:
+    - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
+
+pages-no-deploy:
+  extends: .common-pages
+  rules:
+    # allow generate html manually for testing purpose without pushing to gitlab-pages
+    - when: manual
