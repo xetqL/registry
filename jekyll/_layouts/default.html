@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title> Proton Registry </title>
+    <style>
+        body {
+            background-color: #F3EFFE;
+        }
+
+        h1 {
+            --tw-text-opacity:1;
+            color:rgb(55 37 128/var(--tw-text-opacity));
+            margin-left: 20px;
+        }
+
+        h2 {
+            --tw-text-opacity:1;
+            color:rgb(55 37 128/var(--tw-text-opacity));
+            margin-left: 40px;
+        }
+
+        .styled-table {
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 0.9em;
+            font-family: sans-serif;
+            min-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .styled-table td {
+            padding: 12px 15px;
+        }
+
+         /* Style the button that is used to open and close the collapsible content */
+        button.collapsible {
+            background-color: #eee;
+            color: #444;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+        }
+
+        /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+        .active, button.collapsible:hover {
+            background-color: #ccc;
+        }
+
+        button.collapsible:after {
+            content: '\002B';  /* Unicode character for "plus" sign (+) */
+            color: white;
+            font-weight: bold;
+            float: right;
+            margin-left: 5px;
+        }
+
+        button.collapsible.active:after {
+            content: "\2212";  /* Unicode character for "minus" sign (-) */
+        }
+
+        /* Style the collapsible content. Note: hidden by default */
+        div.collapsible-content {
+            padding: 0 18px;
+            background-color: #f1f1f1;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            color:black;
+        }
+    </style>
+</head>
+<script>
+function onClickCollapsible(clickedItem) {
+    console.log("onClickCollapsible()");
+    clickedItem.classList.toggle("active");
+    var panel = clickedItem.nextElementSibling;
+    if (panel.style.maxHeight){
+      panel.style.maxHeight = null;
+    } else {
+      panel.style.maxHeight = panel.scrollHeight + "px";
+    }
+}
+</script>
+<h1> Proton Registry </h1>
+<section>
+    <div class="content">
+        {{ content }}
+    </div>
+</section>
+<footer>
+</footer>
+</body>
+
+</html>

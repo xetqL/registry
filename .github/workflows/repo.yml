@@ -1,0 +1,105 @@
+name: Build and Deploy
+
+env:
+  RUST_REGISTRY_NAME: test_registry
+
+on:
+  push:
+    branches:
+      - master  # Assuming main is your default branch
+  workflow_dispatch:  # This enables manual triggering
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # This is important for deployment
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # This is important
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install packaging
+
+      - name: Build repository
+        run: |
+          python index.py
+          python packages_info.py
+          mkdir repo
+          cp -vr downloads index packages_info.json repo
+          cat index.html | sed "s+%REGISTRY_NAME%+$RUST_REGISTRY_NAME+g" | \
+            sed "s+%CI_URL%+https://${{ github.repository_owner }}.github.io/${{ github.repository }}/index/+g" | \
+            sed "s+%PROJECTPATH%+${{ github.repository }}+g" > repo/404.html
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-artifacts
+          path: repo/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+        
+    permissions:
+      contents: read    # This is important for deployment
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # Only deploy on master branch or manual trigger
+    if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: repo-artifacts
+          path: repo
+
+      # First install system dependencies
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler libprotobuf-dev
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.0'  # Temporarily downgrade to 3.3.0 for better compatibility
+          bundler-cache: true
+
+      - name: Build Jekyll site
+        run: |
+          cp repo/packages_info.json jekyll/_data/.
+          cp repo/404.html jekyll/_includes/.
+          cd jekyll
+          gem install bundler
+          bundle config set force_ruby_platform true
+          bundle install
+          bundle exec jekyll build -d ../public
+          cp -r ../repo/downloads ../public
+          cp -r ../repo/index ../public
+
+      - name: Upload static files as artifact
+        id: upload
+        uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
+        with:
+          path: public/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        if: github.ref == 'refs/heads/master'
